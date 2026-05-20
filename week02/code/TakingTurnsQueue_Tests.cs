@@ -11,7 +11,9 @@ public class TakingTurnsQueueTests
     // Scenario: Create a queue with the following people and turns: Bob (2), Tim (5), Sue (3) and
     // run until the queue is empty
     // Expected Result: Bob, Tim, Sue, Bob, Tim, Sue, Tim, Sue, Tim, Tim
-    // Defect(s) Found: 
+    // Defect(s) Found: The original GetNextPerson only re-enqueued people with Turns > 1 but never
+    // handled the infinite turns case (Turns <= 0). This test uses only finite turns so it passed,
+    // but the missing infinite-turns branch caused ForeverZero and ForeverNegative to fail.
     public void TestTakingTurnsQueue_FiniteRepetition()
     {
         var bob = new Person("Bob", 2);
@@ -43,7 +45,9 @@ public class TakingTurnsQueueTests
     // Scenario: Create a queue with the following people and turns: Bob (2), Tim (5), Sue (3)
     // After running 5 times, add George with 3 turns.  Run until the queue is empty.
     // Expected Result: Bob, Tim, Sue, Bob, Tim, Sue, Tim, George, Sue, Tim, George, Tim, George
-    // Defect(s) Found: 
+    // Defect(s) Found: Same root cause as above - infinite-turns branch was missing. This test
+    // uses only finite turns so it would have passed before the fix too, but confirming it still
+    // passes after the fix verifies no regressions were introduced.
     public void TestTakingTurnsQueue_AddPlayerMidway()
     {
         var bob = new Person("Bob", 2);
@@ -85,7 +89,10 @@ public class TakingTurnsQueueTests
     // Scenario: Create a queue with the following people and turns: Bob (2), Tim (Forever), Sue (3)
     // Run 10 times.
     // Expected Result: Bob, Tim, Sue, Bob, Tim, Sue, Tim, Sue, Tim, Tim
-    // Defect(s) Found: 
+    // Defect(s) Found: DEFECT - When Tim's Turns value was 0 (infinite), the original code did not
+    // re-enqueue him because the only re-enqueue condition was Turns > 1. Tim was dropped from the
+    // queue after his first turn, causing the sequence to skip him entirely and the queue to empty
+    // too soon. Fix: added an else-if for Turns <= 0 that re-enqueues without modifying Turns.
     public void TestTakingTurnsQueue_ForeverZero()
     {
         var timTurns = 0;
@@ -116,7 +123,10 @@ public class TakingTurnsQueueTests
     // Scenario: Create a queue with the following people and turns: Tim (Forever), Sue (3)
     // Run 10 times.
     // Expected Result: Tim, Sue, Tim, Sue, Tim, Sue, Tim, Tim, Tim, Tim
-    // Defect(s) Found: 
+    // Defect(s) Found: DEFECT - Same as ForeverZero. When Tim's Turns was -3 (negative = infinite),
+    // the original code did not re-enqueue him because Turns > 1 was false for negative numbers.
+    // Tim was lost from the queue after the first dequeue. Fix: handle Turns <= 0 separately,
+    // re-enqueue without touching the Turns value so it stays at its original negative number.
     public void TestTakingTurnsQueue_ForeverNegative()
     {
         var timTurns = -3;
@@ -143,7 +153,8 @@ public class TakingTurnsQueueTests
     [TestMethod]
     // Scenario: Try to get the next person from an empty queue
     // Expected Result: Exception should be thrown with appropriate error message.
-    // Defect(s) Found: 
+    // Defect(s) Found: No defect - the empty queue check was already present in the original code
+    // and throws InvalidOperationException("No one in the queue.") as required.
     public void TestTakingTurnsQueue_Empty()
     {
         var players = new TakingTurnsQueue();
