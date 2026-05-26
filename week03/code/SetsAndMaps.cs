@@ -22,7 +22,36 @@ public static class SetsAndMaps
     public static string[] FindPairs(string[] words)
     {
         // TODO Problem 1 - ADD YOUR CODE HERE
-        return [];
+        // Plan:
+        // 1. Add every word into a HashSet for O(1) lookup.
+        // 2. Iterate through each word once (O(n)).
+        // 3. For each word, build its reverse.
+        // 4. Skip words where both characters are the same (e.g. "aa") — they can't have a symmetric pair.
+        // 5. Check if the reverse exists in the set.
+        // 6. To avoid adding duplicate pairs (am&ma and ma&am), only add the pair when
+        //    the current word is lexicographically less than its reverse.
+        // 7. Return the collected pairs as an array.
+
+        var wordSet = new HashSet<string>(words);
+        var pairs = new List<string>();
+
+        foreach (var word in words)
+        {
+            // Build the reverse of the 2-character word
+            var reverse = $"{word[1]}{word[0]}";
+
+            // Skip same-character words like "aa" — no symmetric pair possible
+            if (word[0] == word[1])
+                continue;
+
+            // Only add once: use lexicographic order to avoid duplicates
+            if (wordSet.Contains(reverse) && string.Compare(word, reverse) < 0)
+            {
+                pairs.Add($"{reverse} & {word}");
+            }
+        }
+
+        return pairs.ToArray();
     }
 
     /// <summary>
@@ -43,6 +72,20 @@ public static class SetsAndMaps
         {
             var fields = line.Split(",");
             // TODO Problem 2 - ADD YOUR CODE HERE
+            // Plan:
+            // 1. The degree is in column index 3 (4th column, 0-based).
+            // 2. Trim any whitespace from the degree string.
+            // 3. If the degree already exists in the dictionary, increment its count.
+            // 4. If it doesn't exist, add it with a count of 1.
+
+            if (fields.Length > 3)
+            {
+                var degree = fields[3].Trim();
+                if (degrees.ContainsKey(degree))
+                    degrees[degree]++;
+                else
+                    degrees[degree] = 1;
+            }
         }
 
         return degrees;
@@ -67,7 +110,45 @@ public static class SetsAndMaps
     public static bool IsAnagram(string word1, string word2)
     {
         // TODO Problem 3 - ADD YOUR CODE HERE
-        return false;
+        // Plan:
+        // 1. Normalize both words: convert to lowercase and remove all spaces.
+        // 2. Build a frequency dictionary for word1: for each character, count occurrences.
+        // 3. For each character in word2, decrement its count in the dictionary.
+        //    If a character from word2 isn't in the dictionary (count 0 or missing), return false.
+        // 4. After processing word2, check that all counts in the dictionary are exactly 0.
+        //    If any count is non-zero, the words are not anagrams.
+        // 5. Return true if all counts are zero.
+
+        // Step 1: Normalize
+        var w1 = word1.ToLower().Replace(" ", "");
+        var w2 = word2.ToLower().Replace(" ", "");
+
+        // Step 2: Build frequency map for word1
+        var freq = new Dictionary<char, int>();
+        foreach (var c in w1)
+        {
+            if (freq.ContainsKey(c))
+                freq[c]++;
+            else
+                freq[c] = 1;
+        }
+
+        // Step 3: Decrement counts using word2
+        foreach (var c in w2)
+        {
+            if (!freq.ContainsKey(c) || freq[c] == 0)
+                return false;
+            freq[c]--;
+        }
+
+        // Step 4: All counts must be zero
+        foreach (var count in freq.Values)
+        {
+            if (count != 0)
+                return false;
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -101,6 +182,14 @@ public static class SetsAndMaps
         // on those classes so that the call to Deserialize above works properly.
         // 2. Add code below to create a string out each place a earthquake has happened today and its magitude.
         // 3. Return an array of these string descriptions.
-        return [];
+
+        // Plan:
+        // - featureCollection.Features is a list of Feature objects.
+        // - Each Feature has a Properties object with Place (string) and Mag (double?).
+        // - Format each as "{place} - Mag {mag}" and return as array.
+
+        return featureCollection?.Features
+            .Select(f => $"{f.Properties.Place} - Mag {f.Properties.Mag}")
+            .ToArray() ?? [];
     }
 }
