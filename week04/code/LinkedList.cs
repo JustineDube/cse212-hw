@@ -33,6 +33,26 @@ public class LinkedList : IEnumerable<int>
     public void InsertTail(int value)
     {
         // TODO Problem 1
+        // Plan:
+        // 1. Create a new node with the given value.
+        // 2. If the list is empty (_tail is null), set both _head and _tail to the new node.
+        // 3. Otherwise connect the new node after the current tail:
+        //    - newNode.Prev = _tail  (link new node back to current tail)
+        //    - _tail.Next = newNode  (link current tail forward to new node)
+        //    - _tail = newNode       (update tail pointer to the new node)
+
+        Node newNode = new(value);
+        if (_tail is null)
+        {
+            _head = newNode;
+            _tail = newNode;
+        }
+        else
+        {
+            newNode.Prev = _tail;  // Connect new node back to current tail
+            _tail.Next = newNode;  // Connect current tail forward to new node
+            _tail = newNode;       // Update tail to the new node
+        }
     }
 
 
@@ -65,6 +85,22 @@ public class LinkedList : IEnumerable<int>
     public void RemoveTail()
     {
         // TODO Problem 2
+        // Plan (mirror of RemoveHead):
+        // 1. If the list has only one item (or is empty), set both _head and _tail to null.
+        // 2. Otherwise disconnect the second-to-last node from the tail:
+        //    - _tail.Prev!.Next = null  (disconnect second-to-last from the tail)
+        //    - _tail = _tail.Prev       (move tail back one node)
+
+        if (_head == _tail)
+        {
+            _head = null;
+            _tail = null;
+        }
+        else if (_tail is not null)
+        {
+            _tail.Prev!.Next = null;  // Disconnect second-to-last node from the tail
+            _tail = _tail.Prev;       // Update tail to point to the second-to-last node
+        }
     }
 
     /// <summary>
@@ -109,6 +145,38 @@ public class LinkedList : IEnumerable<int>
     public void Remove(int value)
     {
         // TODO Problem 3
+        // Plan:
+        // 1. Start at _head and walk forward through the list.
+        // 2. When the node with matching data is found:
+        //    a. If it's the head, call RemoveHead() and return.
+        //    b. If it's the tail, call RemoveTail() and return.
+        //    c. Otherwise it's a middle node — bypass it:
+        //       - curr.Prev!.Next = curr.Next   (skip over curr going forward)
+        //       - curr.Next!.Prev = curr.Prev   (skip over curr going backward)
+        // 3. Stop after the first match (do not keep searching).
+
+        Node? curr = _head;
+        while (curr is not null)
+        {
+            if (curr.Data == value)
+            {
+                if (curr == _head)
+                {
+                    RemoveHead();
+                }
+                else if (curr == _tail)
+                {
+                    RemoveTail();
+                }
+                else
+                {
+                    curr.Prev!.Next = curr.Next;  // Skip curr going forward
+                    curr.Next!.Prev = curr.Prev;  // Skip curr going backward
+                }
+                return; // Stop after first match
+            }
+            curr = curr.Next;
+        }
     }
 
     /// <summary>
@@ -117,6 +185,20 @@ public class LinkedList : IEnumerable<int>
     public void Replace(int oldValue, int newValue)
     {
         // TODO Problem 4
+        // Plan:
+        // 1. Start at _head and walk forward through the entire list.
+        // 2. For every node whose data equals oldValue, update its data to newValue.
+        // 3. Unlike Remove, do NOT stop — continue to the end to replace ALL occurrences.
+
+        Node? curr = _head;
+        while (curr is not null)
+        {
+            if (curr.Data == oldValue)
+            {
+                curr.Data = newValue;  // Replace the value in place
+            }
+            curr = curr.Next;  // Keep going — replace ALL matches
+        }
     }
 
     /// <summary>
@@ -147,7 +229,17 @@ public class LinkedList : IEnumerable<int>
     public IEnumerable Reverse()
     {
         // TODO Problem 5
-        yield return 0; // replace this line with the correct yield return statement(s)
+        // Plan (mirror of GetEnumerator but starting from _tail going backward):
+        // 1. Start at _tail instead of _head.
+        // 2. yield return each node's Data.
+        // 3. Move to curr.Prev instead of curr.Next each iteration.
+
+        var curr = _tail;  // Start at the end since this is a backward iteration
+        while (curr is not null)
+        {
+            yield return curr.Data;  // Provide (yield) each item to the user
+            curr = curr.Prev;        // Go backward in the linked list
+        }
     }
 
     public override string ToString()
@@ -168,8 +260,10 @@ public class LinkedList : IEnumerable<int>
     }
 }
 
-public static class IntArrayExtensionMethods {
-    public static string AsString(this IEnumerable array) {
+public static class IntArrayExtensionMethods
+{
+    public static string AsString(this IEnumerable array)
+    {
         return "<IEnumerable>{" + string.Join(", ", array.Cast<int>()) + "}";
     }
 }
