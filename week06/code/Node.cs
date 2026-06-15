@@ -13,13 +13,19 @@ public class Node
     {
         // TODO Start Problem 1
         // Plan:
-        // 1. If value < current node's Data, go left:
+        // 1. If value == Data, it's a duplicate — ignore it and return (no duplicates allowed).
+        // 2. If value < Data, go left:
         //    - If Left is null, create a new Node there.
         //    - Otherwise recurse into Left.Insert(value).
-        // 2. If value >= current node's Data, go right:
+        // 3. If value > Data, go right:
         //    - If Right is null, create a new Node there.
         //    - Otherwise recurse into Right.Insert(value).
-        // Note: duplicate values are inserted to the right.
+
+        if (value == Data)
+        {
+            // Duplicate — do nothing
+            return;
+        }
 
         if (value < Data)
         {
